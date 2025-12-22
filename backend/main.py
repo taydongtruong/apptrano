@@ -88,5 +88,5 @@ async def approve_payment(payment_id: int, db: Session = Depends(database.get_db
     if not payment:
         raise HTTPException(status_code=404, detail="Không tìm thấy")
     payment.status = True
-    #db.commit()
+    db.commit()
     return {"message": "Duyệt thành công"}
