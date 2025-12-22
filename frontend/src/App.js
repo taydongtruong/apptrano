@@ -1,73 +1,108 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Camera, Send, Wallet, CheckCircle, TrendingUp, ListChecks, UserCircle, Clock } from 'lucide-react';
+import { Camera, Wallet, CheckCircle, TrendingUp, ListChecks, UserCircle, Clock } from 'lucide-react';
+
+// CẤU HÌNH TỰ ĐỘNG CHỌN SERVER
+// Nếu chạy ở localhost -> dùng Local Server
+// Nếu chạy ở web thật -> dùng Render Server
+const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:8000" 
+  : "https://apptrano-api.onrender.com"; 
 
 function App() {
-  const [view, setView] = useState('nephew');
+  // --- KHAI BÁO BIẾN (STATE) ---
+  const [view, setView] = useState('nephew'); // Chế độ: 'nephew' (Cháu) hoặc 'uncle' (Chú)
   const [amount, setAmount] = useState('');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ current_total: 0, total_goal: 45000000, percentage: 0, pending_total: 0 });
+  const [stats, setStats] = useState({ 
+    current_total: 0, 
+    total_goal: 45000000, 
+    percentage: 0, 
+    pending_total: 0 
+  });
   const [payments, setPayments] = useState([]);
 
+  // --- HÀM LẤY DỮ LIỆU ---
   const fetchStats = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/stats');
+      const res = await axios.get(`${API_URL}/stats`);
       setStats(res.data);
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error("Lỗi lấy thông số:", err); 
+    }
   };
 
   const fetchPayments = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/admin/payments');
+      const res = await axios.get(`${API_URL}/admin/payments`);
       setPayments(res.data);
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error("Lỗi lấy danh sách:", err); 
+    }
   };
 
+  // Tự động chạy khi mở App hoặc đổi chế độ xem
   useEffect(() => {
     fetchStats();
     if (view === 'uncle') fetchPayments();
   }, [view]);
 
+  // --- HÀM XỬ LÝ GỬI TIỀN (CHÁU) ---
   const handleSubmit = async () => {
-    if (!amount || !file) return alert("Thiếu tiền hoặc ảnh!");
+    if (!amount || !file) return alert("Vui lòng nhập số tiền và chụp ảnh!");
+    
     setLoading(true);
     const formData = new FormData();
     formData.append('amount', amount);
     formData.append('file', file);
+
     try {
-      await axios.post('http://localhost:8000/payments/', formData);
-      alert("Đã gửi! Chờ ông chú xác nhận để tiền vào tổng nhé.");
-      setAmount(''); setFile(null);
-      fetchStats();
-    } catch (error) { alert("Lỗi!"); }
-    finally { setLoading(false); }
+      await axios.post(`${API_URL}/payments/`, formData);
+      alert("Đã gửi thành công! Chờ Ông Chú xác nhận nhé.");
+      setAmount(''); 
+      setFile(null);
+      fetchStats(); // Cập nhật lại số liệu ngay
+    } catch (error) { 
+      console.error(error);
+      alert("Có lỗi xảy ra! Vui lòng kiểm tra mạng."); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
+  // --- HÀM XỬ LÝ DUYỆT TIỀN (CHÚ) ---
   const handleApprove = async (id) => {
     try {
-      await axios.post(`http://localhost:8000/admin/approve/${id}`);
+      await axios.post(`${API_URL}/admin/approve/${id}`);
+      // Sau khi duyệt xong thì tải lại danh sách và số liệu tổng
       fetchPayments();
       fetchStats();
-    } catch (error) { alert("Lỗi!"); }
+    } catch (error) { 
+      alert("Lỗi khi duyệt khoản này!"); 
+    }
   };
 
+  // --- GIAO DIỆN (RENDER) ---
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
-      {/* Nút chuyển Role */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md shadow-2xl rounded-full p-2 flex gap-2 z-50 border border-white">
-        <button onClick={() => setView('nephew')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${view === 'nephew' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-500'}`}>
+    <div className="min-h-screen bg-slate-50 pb-24 md:pb-12 font-sans">
+      
+      {/* NÚT CHUYỂN ĐỔI ROLE (Dưới cùng màn hình) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md shadow-2xl rounded-full p-2 flex gap-2 z-50 border border-slate-200">
+        <button onClick={() => setView('nephew')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${view === 'nephew' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-500 hover:bg-slate-100'}`}>
           <UserCircle size={20}/> Cháu
         </button>
-        <button onClick={() => setView('uncle')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${view === 'uncle' ? 'bg-green-600 text-white shadow-lg shadow-green-200' : 'text-slate-500'}`}>
+        <button onClick={() => setView('uncle')} className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${view === 'uncle' ? 'bg-green-600 text-white shadow-lg shadow-green-200' : 'text-slate-500 hover:bg-slate-100'}`}>
           <ListChecks size={20}/> Ông Chú
         </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header Tiến độ linh hoạt */}
+        
+        {/* --- PHẦN THỐNG KÊ (LUÔN HIỆN) --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-          <div className="lg:col-span-2 bg-blue-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+          {/* Thẻ Tổng tiền đã khớp */}
+          <div className="lg:col-span-2 bg-blue-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden transition-transform hover:scale-[1.01]">
             <TrendingUp className="absolute right-[-20px] top-[-20px] w-48 h-48 text-white/10" />
             <div className="relative z-10">
               <p className="uppercase tracking-widest text-xs font-black text-blue-200">Tiền đã khớp xác nhận</p>
@@ -78,15 +113,16 @@ function App() {
               <div className="mt-10">
                 <div className="flex justify-between mb-3 text-sm font-bold">
                   <span>Tiến độ: {stats.percentage}%</span>
-                  <span>Mục tiêu: 45.000.000đ</span>
+                  <span>Mục tiêu: {stats.total_goal.toLocaleString()}đ</span>
                 </div>
                 <div className="w-full bg-blue-900/30 h-5 rounded-full p-1 border border-white/10">
-                  <div className="bg-white h-full rounded-full transition-all duration-1000" style={{ width: `${stats.percentage}%` }}></div>
+                  <div className="bg-white h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${stats.percentage}%` }}></div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Thẻ Tiền đang chờ duyệt */}
           <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl flex flex-col justify-center">
             <div className="flex items-center gap-3 text-orange-500 mb-2">
               <Clock size={20} />
@@ -95,49 +131,86 @@ function App() {
             <p className="text-4xl font-black text-slate-800 tracking-tight">
               {stats.pending_total.toLocaleString()}đ
             </p>
-            <p className="text-slate-400 text-sm mt-2 font-medium">Khoản này sẽ cộng vào tổng sau khi chú bấm xác nhận.</p>
+            <p className="text-slate-400 text-sm mt-2 font-medium">Sẽ cộng vào tổng sau khi chú duyệt.</p>
           </div>
         </div>
 
+        {/* --- KHU VỰC CHUYỂN ĐỔI GIAO DIỆN --- */}
         {view === 'nephew' ? (
-          /* PHẦN CHÁU GỬI TIỀN */
-          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-slate-100">
+          
+          /* === GIAO DIỆN CHÁU GỬI TIỀN === */
+          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-slate-100 animate-fade-in-up">
             <h2 className="text-2xl font-bold mb-8 flex items-center gap-3"><Wallet className="text-blue-600" size={30}/> Gửi khoản góp mới</h2>
             <div className="space-y-6">
-                <input type="number" className="w-full text-5xl font-black p-8 bg-slate-50 rounded-[2rem] outline-none text-blue-600 border-4 border-transparent focus:border-blue-500/10 focus:bg-white transition-all" value={amount} onChange={(e)=>setAmount(e.target.value)} placeholder="0"/>
+                <input 
+                  type="number" 
+                  className="w-full text-5xl font-black p-8 bg-slate-50 rounded-[2rem] outline-none text-blue-600 border-4 border-transparent focus:border-blue-500/10 focus:bg-white transition-all placeholder:text-slate-200" 
+                  value={amount} 
+                  onChange={(e)=>setAmount(e.target.value)} 
+                  placeholder="0"
+                />
+                
+                {/* Các nút chọn nhanh số tiền */}
                 <div className="grid grid-cols-4 gap-3">
                   {[100, 200, 500, 1000].map(v => (
                     <button key={v} onClick={()=>setAmount(v*1000)} className="py-4 bg-slate-50 hover:bg-blue-600 hover:text-white rounded-2xl font-bold text-slate-600 transition-all">{v}k</button>
                   ))}
                 </div>
-                <label className="flex flex-col items-center justify-center py-12 bg-slate-50 border-4 border-dashed rounded-[2rem] cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all group">
-                  <Camera size={40} className="text-slate-300 group-hover:text-blue-500 mb-2"/>
-                  <span className="font-bold text-slate-400 group-hover:text-blue-600">{file ? "Đã dán ảnh minh chứng ✅" : "Chụp ảnh chuyển khoản"}</span>
-                  <input type="file" className="hidden" onChange={(e)=>setFile(e.target.files[0])}/>
+
+                {/* Khu vực chọn ảnh */}
+                <label className={`flex flex-col items-center justify-center py-12 bg-slate-50 border-4 border-dashed rounded-[2rem] cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all group ${file ? 'border-green-400 bg-green-50' : 'border-slate-200'}`}>
+                  <Camera size={40} className={`mb-2 transition-colors ${file ? 'text-green-500' : 'text-slate-300 group-hover:text-blue-500'}`}/>
+                  <span className={`font-bold px-4 text-center ${file ? 'text-green-600' : 'text-slate-400 group-hover:text-blue-600'}`}>
+                    {file ? `Đã chọn: ${file.name}` : "Chạm để chụp/tải ảnh minh chứng"}
+                  </span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e)=>setFile(e.target.files[0])}/>
                 </label>
-                <button onClick={handleSubmit} disabled={loading} className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all">
-                  {loading ? "ĐANG GỬI..." : "GỬI CHO ÔNG CHÚ"}
+
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={loading} 
+                  className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "ĐANG GỬI..." : "GỬI NGAY 🚀"}
                 </button>
             </div>
           </div>
+
         ) : (
-          /* PHẦN CHÚ DUYỆT TIỀN */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          /* === GIAO DIỆN ÔNG CHÚ DUYỆT TIỀN === */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
+            {payments.length === 0 && (
+              <p className="col-span-full text-center text-slate-400 italic py-10">Chưa có giao dịch nào.</p>
+            )}
+            
             {payments.map((p) => (
-              <div key={p.id} className="bg-white p-6 rounded-[2.5rem] shadow-lg border border-slate-100">
+              <div key={p.id} className="bg-white p-6 rounded-[2.5rem] shadow-lg border border-slate-100 flex flex-col">
                 <div className="flex justify-between items-center mb-6">
                   <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase ${p.status ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>
                     {p.status ? 'Đã duyệt' : 'Đang chờ'}
                   </span>
-                  <p className="text-slate-300 font-bold text-xs italic">#{p.id}</p>
+                  <p className="text-slate-300 font-bold text-xs italic">ID: #{p.id}</p>
                 </div>
+                
                 <p className="text-3xl font-black text-slate-800 mb-4">{p.amount.toLocaleString()}đ</p>
-                <div className="aspect-video bg-slate-100 rounded-3xl mb-6 overflow-hidden">
-                  <img src={`http://localhost:8000/${p.proof_image_url}`} alt="proof" className="w-full h-full object-cover" />
+                
+                <div className="aspect-video bg-slate-100 rounded-3xl mb-6 overflow-hidden relative group">
+                  <img 
+                    src={`${API_URL}/${p.proof_image_url}`} 
+                    alt="proof" 
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Loi+anh+hoac+link+hong"; }}
+                  />
                 </div>
-                {!p.status && (
-                  <button onClick={() => handleApprove(p.id)} className="w-full py-4 bg-green-500 text-white rounded-2xl font-black hover:bg-green-600 shadow-lg shadow-green-100 transition-all flex items-center justify-center gap-2">
-                    <CheckCircle size={20}/> XÁC NHẬN NHẬN TIỀN
+
+                {!p.status ? (
+                  <button onClick={() => handleApprove(p.id)} className="mt-auto w-full py-4 bg-green-500 text-white rounded-2xl font-black hover:bg-green-600 shadow-lg shadow-green-100 transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <CheckCircle size={20}/> XÁC NHẬN
+                  </button>
+                ) : (
+                   <button disabled className="mt-auto w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold cursor-default flex items-center justify-center gap-2">
+                    <CheckCircle size={20}/> ĐÃ XÁC NHẬN
                   </button>
                 )}
               </div>
@@ -148,4 +221,5 @@ function App() {
     </div>
   );
 }
+
 export default App;
