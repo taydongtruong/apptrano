@@ -33,17 +33,34 @@ function App() {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
-  // --- EFFECT ---
+  // --- EFFECT TỰ ĐỘNG CẬP NHẬT (REAL-TIME POLLING) ---
   useEffect(() => {
-    fetchStats(); // Ai cũng xem được thống kê
-    if (token) {
-        // Giải mã sơ bộ token hoặc gọi API để lấy info user (ở đây mình giả lập lấy role từ localStorage cho nhanh)
-        const savedRole = localStorage.getItem('user_role');
-        const savedName = localStorage.getItem('user_name');
-        if(savedRole) setUser({ role: savedRole, username: savedName });
-
-        if (savedRole === 'uncle') fetchPayments();
+    // 1. Lấy thông tin user từ localStorage khi load trang
+    const savedRole = localStorage.getItem('user_role');
+    const savedName = localStorage.getItem('user_name');
+    if (savedRole && token) {
+      setUser({ role: savedRole, username: savedName });
     }
+
+    // 2. Hàm thực hiện lấy toàn bộ dữ liệu
+    const refreshData = () => {
+      fetchStats(); // Cập nhật thanh tiến độ (cho cả chú và cháu)
+      
+      // Nếu là ông chú thì cập nhật thêm danh sách các khoản cần duyệt
+      const currentRole = localStorage.getItem('user_role');
+      if (currentRole === 'uncle' && token) {
+        fetchPayments();
+      }
+    };
+
+    // 3. Chạy lần đầu tiên ngay khi vào trang
+    refreshData();
+
+    // 4. Thiết lập vòng lặp 5 giây chạy lại một lần
+    const interval = setInterval(refreshData, 5000); 
+
+    // 5. Dọn dẹp vòng lặp khi tắt app để tránh tốn pin/RAM
+    return () => clearInterval(interval);
   }, [token]);
 
   // --- AUTH FUNCTIONS ---
