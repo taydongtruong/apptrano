@@ -1,13 +1,17 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, BigInteger
+from sqlalchemy.orm import relationship # <--- Import thêm cái này
 from datetime import datetime
-from database import Base # Đảm bảo dòng này khớp với file database.py của bạn
+from database import Base 
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True)
+    username = Column(String, unique=True, index=True) # Thêm index cho nhanh
     password_hash = Column(String)
     role = Column(String) # 'nephew' hoặc 'uncle'
+
+    # Thêm dòng này để từ User có thể lấy danh sách các giao dịch họ đã nạp
+    transactions = relationship("Transaction", back_populates="owner")
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -18,3 +22,6 @@ class Transaction(Base):
     status = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"))
+
+    # Thêm dòng này để từ Giao dịch biết được ai là người nạp (owner)
+    owner = relationship("User", back_populates="transactions")
