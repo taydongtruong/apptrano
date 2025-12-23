@@ -41,12 +41,13 @@ async def create_payment(
     db.refresh(new_payment)
 
     # ĐOẠN GỬI EMAIL PHẢI THẲNG HÀNG VỚI db.commit()
-    subject = f"🔔 Khoản nạp mới từ {current_user.username}"
+    subject = f"🔔 Khoản nạp mới từ Chau Thái"
     body = f"""
     <h2>Thông báo nạp tiền mới</h2>
     <p><b>Người nạp:</b> {current_user.username}</p>
     <p><b>Số tiền:</b> {amount:,} VNĐ</p>
     <p><b>Ghi chú:</b> {note or 'Góp tiền xe'}</p>
+    <p><b><i>Vui lòng truy cập link để Xác nhận: </i></b><a href="https://apptrano-web.onrender.com">App Trả Nợ</a></p>
     """
     
     # Dòng này bị lỗi vì bạn có thể đã để thừa khoảng trắng phía trước:
