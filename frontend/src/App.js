@@ -67,7 +67,7 @@ function App() {
         setToken(access_token);
         setUser({ username, role });
         if(role === 'uncle') fetchPayments();
-        alert(`Xin chào ${role === 'uncle' ? 'Ông Chú' : 'Cháu Trai'}!`);
+        alert(`Xin chào ${role === 'uncle' ? 'Ông Chủ' : 'Người trả góp'}!`);
     } catch (err) {
         alert("Đăng nhập thất bại! Kiểm tra lại tài khoản/mật khẩu.");
     } finally { setLoading(false); }
@@ -121,7 +121,7 @@ function App() {
 
     try {
       await api.post(`/payments/`, formData);
-      alert("Đã gửi! Chờ Chú duyệt.");
+      alert("Đã gửi! Chờ Ông Chủ duyệt.");
       setAmount(''); setFile(null);
       fetchStats();
     } catch (error) { 
@@ -162,8 +162,8 @@ function App() {
 
                     {!isLoginView && (
                         <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
-                            <button type="button" onClick={()=>setRole('nephew')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${role==='nephew' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Cháu</button>
-                            <button type="button" onClick={()=>setRole('uncle')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${role==='uncle' ? 'bg-white shadow text-green-600' : 'text-slate-400'}`}>Ông Chú</button>
+                            <button type="button" onClick={()=>setRole('nephew')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${role==='nephew' ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}>Người góp</button>
+                            <button type="button" onClick={()=>setRole('uncle')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${role==='uncle' ? 'bg-white shadow text-green-600' : 'text-slate-400'}`}>Ông Chủ</button>
                         </div>
                     )}
 
@@ -238,7 +238,7 @@ function App() {
               <p className="font-bold text-sm uppercase">Đang chờ duyệt</p>
             </div>
             <p className="text-4xl font-black text-slate-800 tracking-tight">{stats.pending_total.toLocaleString()}đ</p>
-            <p className="text-slate-400 text-sm mt-2 font-medium">Cần Chú duyệt để cộng vào tổng.</p>
+            <p className="text-slate-400 text-sm mt-2 font-medium">Cần Ông Chủ duyệt để cộng vào tổng.</p>
           </div>
         </div>
 
