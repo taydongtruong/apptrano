@@ -41,3 +41,6 @@ class StatsResponse(BaseModel):
     current_total: int
     pending_total: int
     percentage: float
+
+class AdminApproveRequest(BaseModel):
+    password: str # Mật khẩu xác nhận của Admin
