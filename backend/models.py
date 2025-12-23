@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, BigInteger
 from sqlalchemy.orm import relationship # <--- Import thêm cái này
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from database import Base 
 
 class User(Base):
@@ -13,6 +13,9 @@ class User(Base):
     # Thêm dòng này để từ User có thể lấy danh sách các giao dịch họ đã nạp
     transactions = relationship("Transaction", back_populates="owner")
 
+# Tạo một biến offset cho giờ Việt Nam (UTC+7)
+VN_TIMEZONE = timezone(timedelta(hours=7))
+
 class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, index=True)
@@ -20,7 +23,7 @@ class Transaction(Base):
     proof_image_url = Column(String, nullable=True)
     note = Column(String, nullable=True)
     status = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(VN_TIMEZONE))
     user_id = Column(Integer, ForeignKey("users.id"))
 
     # Thêm dòng này để từ Giao dịch biết được ai là người nạp (owner)
