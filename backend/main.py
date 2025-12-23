@@ -9,6 +9,11 @@ import shutil
 import os
 import uuid
 
+import cloudinary
+import cloudinary.uploader
+from dotenv import load_dotenv
+import os
+
 # Import các file nội bộ
 import models
 import auth
@@ -16,6 +21,16 @@ import database
 
 # Lệnh này giúp tự động tạo bảng trong Database nếu chưa có
 models.Base.metadata.create_all(bind=database.engine)
+
+load_dotenv()
+
+# Cấu hình Cloudinary
+cloudinary.config( 
+  cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"), 
+  api_key = os.getenv("CLOUDINARY_API_KEY"), 
+  api_secret = os.getenv("CLOUDINARY_API_SECRET"),
+  secure = True
+)
 
 app = FastAPI()
 
@@ -74,22 +89,26 @@ async def create_payment(
     # [BẢO MẬT] Bắt buộc đăng nhập mới được nạp tiền
     current_user: models.User = Depends(auth.get_current_user) 
 ):
-    file_extension = os.path.splitext(file.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
-    file_location = f"static/{unique_filename}"
-    
+    # --- LOGIC MỚI: UPLOAD LÊN CLOUD ---
     try:
-        with open(file_location, "wb+") as file_object:
-            shutil.copyfileobj(file.file, file_object)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Lỗi lưu ảnh")
+        # Upload file trực tiếp lên Cloudinary
+        # folder="apptrano_proofs" giúp gom tất cả ảnh vào 1 thư mục trên cloud cho gọn
+        upload_result = cloudinary.uploader.upload(file.file, folder="apptrano_proofs")
+        
+        # Lấy đường dẫn ảnh online (bắt đầu bằng https://...)
+        file_url = upload_result.get("secure_url")
+        
+    except Exception as e:
+        print("Lỗi Cloudinary:", e) # In lỗi ra terminal để dễ debug
+        raise HTTPException(status_code=500, detail="Lỗi không thể tải ảnh lên Cloud")
 
+    # --- LƯU VÀO DATABASE ---
     try:
         new_payment = models.Transaction(
             amount=amount,
             note=note or "Góp tiền xe",
-            proof_image_url=file_location,
-            user_id=current_user.id, # [BẢO MẬT] Lấy đúng ID người đang đăng nhập
+            proof_image_url=file_url, # Lưu đường dẫn online thay vì local
+            user_id=current_user.id, 
             status=False 
         )
         db.add(new_payment)
@@ -97,11 +116,10 @@ async def create_payment(
         db.refresh(new_payment)
     except Exception as e:
         db.rollback()
-        if os.path.exists(file_location):
-            os.remove(file_location)
+        # Lưu ý: Nếu lỗi DB thì ảnh trên Cloud vẫn còn, nhưng không sao, nó là rác thôi.
         raise HTTPException(status_code=500, detail=f"Lỗi DB: {str(e)}")
 
-    return {"message": "Gửi thành công", "id": new_payment.id}
+    return {"message": "Gửi thành công", "id": new_payment.id, "url": file_url}
 
 @app.get("/stats")
 async def get_stats(db: Session = Depends(database.get_db)):

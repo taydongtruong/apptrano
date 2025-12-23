@@ -9,14 +9,14 @@ const API_URL = window.location.hostname === "localhost" || window.location.host
 
 function App() {
   // --- STATE ---
-  const [user, setUser] = useState(null); // Lưu thông tin user { username, role }
+  const [user, setUser] = useState(null); 
   const [token, setToken] = useState(localStorage.getItem('access_token'));
   
   // State cho form Login/Register
   const [isLoginView, setIsLoginView] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('nephew'); // Chỉ dùng khi đăng ký
+  const [role, setRole] = useState('nephew'); 
 
   // State dữ liệu chính
   const [amount, setAmount] = useState('');
@@ -27,7 +27,6 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
 
   // --- CẤU HÌNH AXIOS ---
-  // Tự động gắn Token vào mọi request nếu đã đăng nhập
   const api = axios.create({ baseURL: API_URL });
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -35,31 +34,23 @@ function App() {
 
   // --- EFFECT TỰ ĐỘNG CẬP NHẬT (REAL-TIME POLLING) ---
   useEffect(() => {
-    // 1. Lấy thông tin user từ localStorage khi load trang
     const savedRole = localStorage.getItem('user_role');
     const savedName = localStorage.getItem('user_name');
     if (savedRole && token) {
       setUser({ role: savedRole, username: savedName });
     }
 
-    // 2. Hàm thực hiện lấy toàn bộ dữ liệu
     const refreshData = () => {
-      fetchStats(); // Cập nhật thanh tiến độ (cho cả chú và cháu)
-      
-      // Nếu là ông chú thì cập nhật thêm danh sách các khoản cần duyệt
+      fetchStats(); 
       const currentRole = localStorage.getItem('user_role');
       if (currentRole === 'uncle' && token) {
         fetchPayments();
       }
     };
 
-    // 3. Chạy lần đầu tiên ngay khi vào trang
     refreshData();
-
-    // 4. Thiết lập vòng lặp 5 giây chạy lại một lần
     const interval = setInterval(refreshData, 5000); 
 
-    // 5. Dọn dẹp vòng lặp khi tắt app để tránh tốn pin/RAM
     return () => clearInterval(interval);
   }, [token]);
 
@@ -68,14 +59,12 @@ function App() {
     e.preventDefault();
     setLoading(true);
     try {
-        // FastAPI OAuth2 cần gửi dạng Form Data
         const formData = new FormData();
         formData.append('username', username);
         formData.append('password', password);
 
         const res = await axios.post(`${API_URL}/login`, formData);
         
-        // Lưu thông tin
         const { access_token, role } = res.data;
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('user_role', role);
@@ -101,7 +90,7 @@ function App() {
 
         await axios.post(`${API_URL}/register`, formData);
         alert("Đăng ký thành công! Hãy đăng nhập ngay.");
-        setIsLoginView(true); // Chuyển về trang login
+        setIsLoginView(true); 
     } catch (err) {
         alert("Đăng ký lỗi! Có thể tên đăng nhập đã tồn tại.");
     } finally { setLoading(false); }
@@ -156,8 +145,6 @@ function App() {
   };
 
   // --- UI COMPONENTS ---
-
-  // 1. Màn hình Auth (Login/Register)
   if (!token) {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
@@ -199,11 +186,10 @@ function App() {
     )
   }
 
-  // 2. Màn hình Chính (Dashboard)
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12 font-sans relative">
       
-      {/* HEADER USER & LOGOUT */}
+      {/* HEADER */}
       <div className="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${user?.role === 'uncle' ? 'bg-green-500' : 'bg-blue-500'}`}>
@@ -229,7 +215,7 @@ function App() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         
-        {/* STATS CARD */}
+        {/* STATS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
           <div className="lg:col-span-2 bg-blue-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
             <TrendingUp className="absolute right-[-20px] top-[-20px] w-48 h-48 text-white/10" />
@@ -259,7 +245,6 @@ function App() {
           </div>
         </div>
 
-        {/* LOGIC HIỂN THỊ THEO ROLE */}
         {user?.role === 'nephew' ? (
           /* GIAO DIỆN CHÁU */
           <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-slate-100">
@@ -299,8 +284,9 @@ function App() {
                 
                 <p className="text-3xl font-black text-slate-800 mb-4">{p.amount.toLocaleString()}đ</p>
                 
-                <div className="aspect-video bg-slate-100 rounded-3xl mb-6 overflow-hidden relative group cursor-pointer border border-slate-100" onClick={() => setSelectedImage(`${API_URL}/${p.proof_image_url}`)}>
-                  <img src={`${API_URL}/${p.proof_image_url}`} alt="proof" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Loi+anh"; }}/>
+                {/* --- ĐÂY LÀ CHỖ ĐÃ SỬA: DÙNG TRỰC TIẾP p.proof_image_url --- */}
+                <div className="aspect-video bg-slate-100 rounded-3xl mb-6 overflow-hidden relative group cursor-pointer border border-slate-100" onClick={() => setSelectedImage(p.proof_image_url)}>
+                  <img src={p.proof_image_url} alt="proof" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Loi+anh"; }}/>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                     <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-all" size={32} />
                   </div>
