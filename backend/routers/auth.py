@@ -21,6 +21,15 @@ def register(
     if role not in ["nephew", "uncle"]:
         raise HTTPException(status_code=400, detail="Role không hợp lệ (chỉ chấp nhận 'nephew' hoặc 'uncle')")
 
+    # 2. KIỂM TRA DUY NHẤT ÔNG CHÚ (MỚI)
+    if role == "uncle":
+        existing_uncle = db.query(models.User).filter(models.User.role == "uncle").first()
+        if existing_uncle:
+            raise HTTPException(
+                status_code=400, 
+                detail="Hệ thống đã có 'Ông Chủ' rồi. Không thể đăng ký thêm quản trị viên!"
+            )
+    
     if db.query(models.User).filter(models.User.username == username).first():
         raise HTTPException(status_code=400, detail="Tên đăng nhập đã tồn tại")
     
