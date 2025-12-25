@@ -198,7 +198,7 @@ const Dashboard = () => {
                     <img src={p.proof_image_url} alt="proof" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><ZoomIn className="text-white"/></div>
                   </div>
-                  {!p.status ? <button onClick={() => openConfirmModal(p.id, p.amount)} className="w-full py-3 bg-green-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 text-sm"><CheckCircle size={16}/> DUYỆT</button> 
+                  {!p.status ? <button onClick={() => openConfirmModal(p.id, p.amount)} className="w-full py-3 bg-green-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 text-sm"><CheckCircle size={16}/> DUYỆT và không thể hoàn tác</button> 
                   : <button disabled className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl font-bold flex items-center justify-center gap-2 text-sm cursor-not-allowed"><CheckCircle size={16}/> ĐÃ DUYỆT</button>}
                 </div>
              ))}
