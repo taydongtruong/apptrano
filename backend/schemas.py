@@ -31,7 +31,10 @@ class TransactionResponse(BaseModel):
     status: bool
     created_at: datetime
     # Trả về luôn thông tin người tạo (nếu cần hiển thị tên người nạp)
-    owner: UserResponse 
+    owner: UserResponse
+
+    # [MỚI] Có thể trả về thông tin campaign nếu cần (optional)
+    campaign_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -41,6 +44,23 @@ class StatsResponse(BaseModel):
     current_total: int
     pending_total: int
     percentage: float
+    campaign_title: str # [MỚI] Trả về tên chiến dịch để hiển thị
 
 class AdminApproveRequest(BaseModel):
     password: str # Mật khẩu xác nhận của Admin
+
+# --- THÊM SCHEMAS CHO CAMPAIGN ---
+class CampaignBase(BaseModel):
+    title: str
+    target_amount: int
+
+class CampaignCreate(CampaignBase):
+    pass
+
+class CampaignResponse(CampaignBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

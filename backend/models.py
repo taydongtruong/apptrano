@@ -25,6 +25,21 @@ class Transaction(Base):
     status = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(VN_TIMEZONE))
     user_id = Column(Integer, ForeignKey("users.id"))
-
     # Thêm dòng này để từ Giao dịch biết được ai là người nạp (owner)
     owner = relationship("User", back_populates="transactions")
+
+    # [MỚI] Liên kết Campaign
+    campaign_id = Column(Integer, ForeignKey("campaigns.id"))
+    campaign = relationship("Campaign", back_populates="transactions")
+
+class Campaign(Base):
+    __tablename__ = "campaigns"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)           # Ví dụ: "Mua xe Mercedes"
+    target_amount = Column(BigInteger) # Ví dụ: 1.500.000.000
+    is_active = Column(Boolean, default=False) # Chỉ có 1 cái True cùng lúc
+    created_at = Column(DateTime, default=lambda: datetime.now(VN_TIMEZONE))
+
+    # Quan hệ: 1 Chiến dịch có nhiều Giao dịch
+    transactions = relationship("Transaction", back_populates="campaign")
