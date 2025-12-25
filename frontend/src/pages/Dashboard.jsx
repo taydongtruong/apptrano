@@ -103,7 +103,7 @@ const Dashboard = () => {
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-black mb-4 flex items-center gap-2"><Lock className="text-orange-500"/> XÁC NHẬN DUYỆT {confirmModal.paymentAmount.toLocaleString()}đ <i> Lưu ý hành động này không thể hoàn tác</i></h3>
+            <h3 className="text-xl font-black mb-4 flex items-center gap-2"><Lock className="text-orange-500"/> XÁC NHẬN DUYỆT <i>{confirmModal.paymentAmount.toLocaleString()}đ</i> <i> !Lưu ý hành động này không thể hoàn tác</i></h3>
             <input type="password" className="w-full p-4 bg-slate-100 rounded-xl font-bold mb-4 outline-none" placeholder="Mật khẩu Admin..." value={adminPass} onChange={(e) => setAdminPass(e.target.value)} autoFocus />
             <div className="flex gap-3">
               <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 py-3 bg-slate-100 font-bold rounded-xl text-slate-500">HỦY</button>
