@@ -103,7 +103,7 @@ const Dashboard = () => {
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-black mb-4 flex items-center gap-2"><Lock className="text-orange-500"/> DUYỆT {confirmModal.paymentAmount.toLocaleString()}đ</h3>
+            <h3 className="text-xl font-black mb-4 flex items-center gap-2"><Lock className="text-orange-500"/> XÁC NHẬN DUYỆT {confirmModal.paymentAmount.toLocaleString()}đ <i> Lưu ý hành động này không thể hoàn tác</i></h3>
             <input type="password" className="w-full p-4 bg-slate-100 rounded-xl font-bold mb-4 outline-none" placeholder="Mật khẩu Admin..." value={adminPass} onChange={(e) => setAdminPass(e.target.value)} autoFocus />
             <div className="flex gap-3">
               <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 py-3 bg-slate-100 font-bold rounded-xl text-slate-500">HỦY</button>
@@ -198,7 +198,7 @@ const Dashboard = () => {
                     <img src={p.proof_image_url} alt="proof" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"><ZoomIn className="text-white"/></div>
                   </div>
-                  {!p.status ? <button onClick={() => openConfirmModal(p.id, p.amount)} className="w-full py-3 bg-green-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 text-sm"><CheckCircle size={16}/> DUYỆT và không thể hoàn tác</button> 
+                  {!p.status ? <button onClick={() => openConfirmModal(p.id, p.amount)} className="w-full py-3 bg-green-500 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 text-sm"><CheckCircle size={16}/> DUYỆT</button> 
                   : <button disabled className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl font-bold flex items-center justify-center gap-2 text-sm cursor-not-allowed"><CheckCircle size={16}/> ĐÃ DUYỆT</button>}
                 </div>
              ))}
