@@ -16,7 +16,7 @@ const Navbar = () => {
     <nav className="bg-white px-6 py-4 shadow-sm border-b border-slate-100 flex justify-between items-center sticky top-0 z-50">
       <Link to="/" className="text-xl font-black text-slate-800 flex items-center gap-2 hover:text-blue-600 transition-colors">
         <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold">$</div>
-        APP TRẢ NỢ
+        APAL
       </Link>
 
       {user && (

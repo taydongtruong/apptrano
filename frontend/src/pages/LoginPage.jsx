@@ -45,7 +45,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-blue-600 mb-2">APP TRẢ NỢ</h1>
+          <h1 className="text-3xl font-black text-blue-600 mb-2">APAL Quản lý tài chính</h1>
           <p className="text-slate-400">{isLoginView ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản mới'}</p>
         </div>
 

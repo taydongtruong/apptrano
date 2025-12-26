@@ -8,7 +8,7 @@ import models, database, auth, schemas
 
 router = APIRouter(tags=["Transactions"])
 
-# --- API 1: TẠO KHOẢN NẠP (Tự động gắn vào Campaign đang chạy) ---
+# --- API 1: TẠO KHOẢN NẠP (Giữ nguyên) ---
 @router.post("/payments/", response_model=schemas.TransactionResponse)
 async def create_payment(
     amount: int = Form(...),
@@ -17,14 +17,11 @@ async def create_payment(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    # [QUAN TRỌNG] 1. Tìm campaign đang active để gắn giao dịch vào
     active_campaign = db.query(models.Campaign).filter(models.Campaign.is_active == True).first()
     
-    # Nếu Ông Chú chưa tạo/kích hoạt mục tiêu nào thì không cho nạp
     if not active_campaign:
-        raise HTTPException(status_code=400, detail="Hiện tại chưa có mục tiêu nào được kích hoạt. Vui lòng liên hệ Admin!")
+        raise HTTPException(status_code=400, detail="Hiện tại chưa có mục tiêu nào được kích hoạt.")
 
-    # 2. Upload ảnh
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Chỉ chấp nhận file ảnh")
 
@@ -35,29 +32,26 @@ async def create_payment(
         print(f"Cloudinary Error: {e}")
         raise HTTPException(status_code=500, detail="Lỗi tải ảnh lên Cloud")
 
-    # 3. Lưu DB (Có gắn campaign_id)
     new_payment = models.Transaction(
         amount=amount,
         note=note or "Góp tiền",
         proof_image_url=file_url,
         user_id=current_user.id,
-        campaign_id=active_campaign.id, # <--- Gắn ID mục tiêu vào đây
+        campaign_id=active_campaign.id,
         status=False
     )
     db.add(new_payment)
     db.commit()
     db.refresh(new_payment)
 
-    # Gửi email thông báo
     try:
-        subject = f"🔔 Khoản nạp mới cho mục tiêu: {active_campaign.title}"
+        subject = f"🔔 Khoản nạp mới: {active_campaign.title}"
         body = f"""
         <h2>Thông báo nạp tiền mới</h2>
-        <p><b>Mục tiêu:</b> {active_campaign.title}</p>
         <p><b>Người nạp:</b> {current_user.username}</p>
         <p><b>Số tiền:</b> {amount:,} VNĐ</p>
         <p><b>Ghi chú:</b> {note or 'Góp tiền'}</p>
-        <p><b><i>Vui lòng truy cập để duyệt: </i></b><a href="https://apptrano-web.onrender.com">App Trả Nợ</a></p>
+        <p><a href="https://apptrano-web.onrender.com">Bấm vào đây để duyệt ngay</a></p>
         """
         send_email_notification(subject, body)
     except Exception as e:
@@ -65,15 +59,13 @@ async def create_payment(
 
     return new_payment
 
-# --- API 2: LẤY LỊCH SỬ CÁ NHÂN (Theo Campaign đang Active) ---
+# --- API 2: LẤY LỊCH SỬ CÁ NHÂN (Giữ nguyên) ---
 @router.get("/payments/me", response_model=List[schemas.TransactionResponse])
 async def get_my_payments(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    # Mặc định Cháu chỉ nhìn thấy lịch sử đóng góp cho MỤC TIÊU HIỆN TẠI
     active_campaign = db.query(models.Campaign).filter(models.Campaign.is_active == True).first()
-    
     query = db.query(models.Transaction).filter(models.Transaction.user_id == current_user.id)
     
     if active_campaign:
@@ -81,13 +73,12 @@ async def get_my_payments(
         
     return query.order_by(models.Transaction.id.desc()).all()
 
-# --- API 3: LẤY THỐNG KÊ (Hỗ trợ lọc theo ID Chiến dịch) ---
+# --- API 3: LẤY THỐNG KÊ (Giữ nguyên) ---
 @router.get("/stats", response_model=schemas.StatsResponse)
 async def get_stats(
-    campaign_id: Optional[int] = None, # Cho phép Frontend truyền ID lên để xem lịch sử cũ
+    campaign_id: Optional[int] = None,
     db: Session = Depends(database.get_db)
 ):
-    # Nếu có ID thì lấy campaign đó, không thì lấy cái đang active
     if campaign_id:
         campaign = db.query(models.Campaign).filter(models.Campaign.id == campaign_id).first()
     else:
@@ -99,7 +90,6 @@ async def get_stats(
             "campaign_title": "Chưa có mục tiêu"
         }
 
-    # Tính toán CHỈ TRONG PHẠM VI campaign đó
     confirmed = db.query(func.sum(models.Transaction.amount)).filter(
         models.Transaction.campaign_id == campaign.id,
         models.Transaction.status == True
@@ -117,26 +107,32 @@ async def get_stats(
         "current_total": int(confirmed),
         "pending_total": int(pending),
         "percentage": percentage,
-        "campaign_title": campaign.title # Trả về tên để hiển thị
+        "campaign_title": campaign.title
     }
 
-# --- API 4: ADMIN LẤY DANH SÁCH (Có lọc theo Campaign) ---
+# --- API 4: ADMIN LẤY DANH SÁCH (ĐÃ NÂNG CẤP BỘ LỌC) ---
 @router.get("/admin/payments", response_model=List[schemas.TransactionResponse])
 async def get_admin_payments(
     campaign_id: Optional[int] = None, 
+    status_filter: Optional[str] = None, # <--- Tham số mới: 'pending' hoặc 'approved'
     db: Session = Depends(database.get_db),
     current_uncle: models.User = Depends(auth.get_current_uncle)
 ):
     query = db.query(models.Transaction)
     
-    # Nếu Admin chọn xem 1 campaign cụ thể
+    # 1. Lọc theo Campaign
     if campaign_id:
         query = query.filter(models.Transaction.campaign_id == campaign_id)
     else:
-        # Mặc định lấy của cái đang active
         active_c = db.query(models.Campaign).filter(models.Campaign.is_active == True).first()
         if active_c:
             query = query.filter(models.Transaction.campaign_id == active_c.id)
+
+    # 2. Lọc theo Trạng thái (Logic mới)
+    if status_filter == "pending":
+        query = query.filter(models.Transaction.status == False)
+    elif status_filter == "approved":
+        query = query.filter(models.Transaction.status == True)
 
     return query.order_by(models.Transaction.id.desc()).all()
 
@@ -150,7 +146,6 @@ async def approve_payment(
 ):
     clean_password = confirm_data.password.strip()
     
-    # Verify password
     if not auth.verify_password(clean_password, current_uncle.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
