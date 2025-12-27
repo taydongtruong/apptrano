@@ -48,3 +48,8 @@ app.include_router(campaigns.router)
 @app.get("/")
 def root():
     return {"message": "Server đang chạy ngon lành cành đào!"}
+
+# Thêm route này để UptimeRobot gọi vào
+@app.get("/health", methods=["GET", "POST", "HEAD"])
+def health_check():
+    return {"status": "ok", "message": "Server is running"}
