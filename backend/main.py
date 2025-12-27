@@ -50,6 +50,6 @@ def root():
     return {"message": "Server đang chạy ngon lành cành đào!"}
 
 # Thêm route này để UptimeRobot gọi vào
-@app.get("/health", methods=["GET", "POST", "HEAD"])
-def health_check():
+@app.api_route("/health", methods=["GET", "POST", "HEAD"])
+async def health_check():
     return {"status": "ok", "message": "Server is running"}
