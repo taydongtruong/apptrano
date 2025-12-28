@@ -1,8 +1,16 @@
 import axios from 'axios';
 
-const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:8000" 
-  : "https://apptrano-api.onrender.com"; 
+// Cách kiểm tra chuẩn nhất: Kiểm tra biến global Capacitor
+// Nếu biến này tồn tại, nghĩa là code đang chạy bên trong App Mobile
+const isMobileApp = window.Capacitor !== undefined;
+
+// Logic chọn URL:
+// 1. Nếu là App Mobile (isMobileApp = true) -> LUÔN dùng Render
+// 2. Nếu là Web, nhưng không phải localhost (đã deploy) -> Dùng Render
+// 3. Chỉ dùng localhost:8000 khi đang code trên máy tính (Web Local)
+const API_URL = (isMobileApp || (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"))
+  ? "https://apptrano-api.onrender.com" 
+  : "http://localhost:8000"; 
 
 const axiosClient = axios.create({
   baseURL: API_URL,
@@ -23,13 +31,16 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor: Xử lý lỗi tập trung (ví dụ: Token hết hạn thì tự logout)
+// Interceptor: Xử lý lỗi tập trung
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.clear();
-      window.location.href = '/'; // Đẩy về trang login nếu token hỏng
+      // Dùng window.location.pathname thay vì href để mượt hơn trên mobile
+      if (window.location.pathname !== '/') {
+          window.location.href = '/'; 
+      }
     }
     return Promise.reject(error);
   }

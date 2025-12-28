@@ -12,3 +12,18 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# --- Android Studio / Capacitor ---
+# Tránh các file cấu hình cá nhân và file build của Android
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/android/.idea/
+frontend/android/*.iml
+frontend/android/captures/
+frontend/android/.cxx/
+frontend/android/.externalNativeBuild/
+
+# File log và tạm của Capacitor
+capacitor.settings.json

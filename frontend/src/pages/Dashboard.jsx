@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import StatsCard from '../components/StatsCard';
 import Navbar from '../components/Navbar';
 import { Camera, Wallet, CheckCircle, ZoomIn, Lock, Clock, XCircle, Filter } from 'lucide-react';
+// Import file tiện ích hiệu ứng mobile
+import { playMobileEffect } from '../utils/mobileEffects';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -71,6 +73,11 @@ const Dashboard = () => {
     formData.append('file', file);
     try {
       await axiosClient.post('/payments/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+      // --- HIỆU ỨNG MOBILE ---
+      // Rung và nói khi gửi thành công
+      playMobileEffect(`Đã gửi thành công ${amount.toLocaleString()} đồng. Chờ duyệt nhé!`);
+      
       alert("Đã gửi! Chờ duyệt nhé.");
       setAmount(''); setFile(null);
       fetchData();
@@ -89,6 +96,11 @@ const Dashboard = () => {
     setApproving(true);
     try {
       await axiosClient.put(`/payments/${confirmModal.paymentId}/approve`, { password: adminPass });
+      
+      // --- HIỆU ỨNG MOBILE ---
+      // Rung và nói khi duyệt tiền thành công
+      playMobileEffect(`Đã duyệt thành công khoản tiền ${confirmModal.paymentAmount.toLocaleString()} đồng!`);
+
       alert("✅ Đã duyệt!");
       setConfirmModal({ isOpen: false, paymentId: null, paymentAmount: 0 });
       fetchData(); 
