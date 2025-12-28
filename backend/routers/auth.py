@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
 
 # Import từ thư mục cha (parent directory)
 import database, models, auth, schemas
@@ -42,7 +43,10 @@ def register(
 
 @router.post("/login", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    stmt = select(models.User).where(models.User.username == form_data.username)
+    result = db.execute(stmt)
+    user = result.scalar_one_or_none() # Lấy 1 kết quả hoặc None
+
     if not user or not auth.verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
