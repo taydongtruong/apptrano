@@ -38,7 +38,7 @@ def register(
     new_user = models.User(username=username, password_hash=hashed_pw, role=role)
     db.add(new_user)
     db.commit()
-    #db.refresh(new_user)
+    db.refresh(new_user)
     return new_user
 
 @router.post("/login", response_model=schemas.Token)
