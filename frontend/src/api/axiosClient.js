@@ -14,9 +14,9 @@ const API_URL = (isMobileApp || (window.location.hostname !== "localhost" && win
 
 const axiosClient = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  //headers: {
+    //'Content-Type': 'application/json',
+  //},
 });
 
 // Interceptor: Tự động chèn Token vào Header trước khi gửi request
