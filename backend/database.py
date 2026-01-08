@@ -14,7 +14,17 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Khởi tạo Engine
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    # 1. Tự động kiểm tra kết nối trước khi sử dụng
+    pool_pre_ping=True,
+    # 2. Giới hạn thời gian sống của một kết nối trong pool (ví dụ 300 giây = 5 phút)
+    pool_recycle=300,
+    # 3. Kích thước pool và tối đa kết nối tạm thời
+    pool_size=5,
+    max_overflow=10
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
