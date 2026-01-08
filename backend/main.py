@@ -7,7 +7,7 @@ import cloudinary
 
 # Import các thành phần nội bộ
 import models, database
-from routers import auth, transactions, admin, campaigns
+from routers import auth, transactions, campaigns
 
 # Load env & Config DB
 load_dotenv()
@@ -41,7 +41,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Đây là bước gom các file con vào ứng dụng chính
 app.include_router(auth.router)
 app.include_router(transactions.router)
-app.include_router(admin.router)
 app.include_router(campaigns.router)
 
 
