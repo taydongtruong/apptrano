@@ -112,7 +112,7 @@ const Dashboard = () => {
   const formatDate = (dateString) => {
     try {
         const d = new Date(dateString.replace(' ', 'T') + 'Z');
-        return isNaN(d.getTime()) ? "..." : d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+        return isNaN(d.getTime()) ? "..." : d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
     } catch (e) { return "..."; }
   };
 
