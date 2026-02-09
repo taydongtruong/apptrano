@@ -190,7 +190,7 @@ const Dashboard = () => {
                      <div className="flex-1 min-w-0">
                        <div className="flex justify-between items-center mb-1">
                           <p className="font-black text-slate-800 text-lg">{p.amount.toLocaleString()}₫</p>
-                          <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase ${p.status ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>{p.status ? 'Đã duyệt' : 'Chờ'}</span>
+                          <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase ${p.status ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>{p.status ? 'Đã duyệt' : 'Chờ duyệt'}</span>
                        </div>
                        <div className="flex justify-between items-center text-[10px] font-bold">
                           <p className="text-slate-400 truncate">{p.note || "Góp tiền quỹ"}</p>
